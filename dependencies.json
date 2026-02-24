@@ -1,0 +1,13 @@
+{
+    "$schema": "sublime://packagecontrol.io/schemas/dependencies",
+    "*": {
+        "*": [
+            "bs4",
+            "requests",
+            "urllib3",
+            "idna",
+            "typing_extensions",
+            "soupsieve"
+        ]
+    }
+}
