@@ -1,6 +1,7 @@
 import sublime
 import sublime_plugin
 import requests
+import re
 from bs4 import BeautifulSoup
 
 class ConfluentConfigurationAssistant(sublime_plugin.TextCommand):
@@ -33,10 +34,33 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         return completions
 
 class ConfluentPlatformAnsibleConfigurationAssistant(sublime_plugin.EventListener):
+    def __init__(self):
+        self.cp_ansible_variables = self.fetch_cp_ansible_variables()
+
+    def fetch_cp_ansible_variables(self):
+        url = "https://raw.githubusercontent.com/confluentinc/cp-ansible/master/docs/VARIABLES.md"
+        response = requests.get(url)
+        response.raise_for_status()
+
+        lines = response.text.split('\n')
+        variables = []
+        
+        for i, line in enumerate(lines):
+            if line.startswith('### '):
+                var_name = line.replace('### ', '').strip()
+                
+                description = ""
+                for j in range(i + 1, len(lines)):
+                    if lines[j].strip():
+                        description = lines[j].strip()
+                        break
+                
+                variables.append((var_name, description))
+
+        return variables
+
     def on_query_completions(self, view, prefix, locations):
-        completions = [
-            ("CPA\tExpand to CONFLUENT PLATFORM ANSIBLE", "CONFLUENT PLATFORM ANSIBLE"),
-        ]
+        completions = [(variable[0]+"\t"+variable[1]) for variable in self.cp_ansible_variables]
         return completions
 
 class ConfluentDockerConfigurationAssistant(sublime_plugin.EventListener):
