@@ -16,6 +16,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         self.source_connect_configs = self.fetch_source_connect_configs()
         self.schema_registry_configs = self.fetch_schema_registry_configs()
         self.schema_registry_client_configs = self.fetch_schema_registry_client_configs()
+        self.rest_proxy_configs = self.fetch_rest_proxy_configs()
 
     def fetch_broker_configs(self):
         url = "https://docs.confluent.io/platform/current/installation/configuration/broker-configs.html"
@@ -121,6 +122,23 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
 
+    def fetch_rest_proxy_configs(self):
+        url = "https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/config.html"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            configs = {}
+            
+            # Assuming the configurations and their descriptions are structured in a specific way
+            for item in soup.find_all('dt'):
+                config_name = item.find_next('span', class_='pre').get_text()
+                description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
+                configs[config_name] = description
+            return configs
+        else:
+            return f"Error: Unable to fetch data, status code {response.status_code}"
+
     def on_query_completions(self, view, prefix, locations):
         completions = [(config+"\t"+self.broker_configs[config], config) for config in self.broker_configs]
         completions += [(config+"\t"+self.connect_configs[config], config) for config in self.connect_configs]
@@ -128,6 +146,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         completions += [(config+"\t"+self.source_connect_configs[config], config) for config in self.source_connect_configs]
         completions += [(config+"\t"+self.schema_registry_configs[config], config) for config in self.schema_registry_configs]
         completions += [(config+"\t"+self.schema_registry_client_configs[config], config) for config in self.schema_registry_client_configs]
+        completions += [(config+"\t"+self.rest_proxy_configs[config], config) for config in self.rest_proxy_configs]
         return completions
 
 class ConfluentPlatformAnsibleConfigurationAssistant(sublime_plugin.EventListener):
