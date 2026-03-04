@@ -11,6 +11,7 @@ class ConfluentConfigurationAssistant(sublime_plugin.TextCommand):
 class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
     def __init__(self):
         self.broker_configs = self.fetch_broker_configs()
+        self.connect_configs = self.fetch_connect_configs()
 
     def fetch_broker_configs(self):
         url = "https://docs.confluent.io/platform/current/installation/configuration/broker-configs.html"
@@ -29,8 +30,26 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
 
+    def fetch_connect_configs(self):
+        url = "https://docs.confluent.io/platform/current/installation/configuration/connect/index.html"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            configs = {}
+            
+            # Assuming the configurations and their descriptions are structured in a specific way
+            for item in soup.find_all('h3'):
+                config_name = item.get_text()[:-1]
+                description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
+                configs[config_name] = description
+            return configs
+        else:
+            return f"Error: Unable to fetch data, status code {response.status_code}"
+
     def on_query_completions(self, view, prefix, locations):
         completions = [(config+"\t"+self.broker_configs[config], config) for config in self.broker_configs]
+        completions += [(config+"\t"+self.connect_configs[config], config) for config in self.connect_configs]
         return completions
 
 class ConfluentPlatformAnsibleConfigurationAssistant(sublime_plugin.EventListener):
