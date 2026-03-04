@@ -15,6 +15,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         self.sink_connect_configs = self.fetch_sink_connect_configs()
         self.source_connect_configs = self.fetch_source_connect_configs()
         self.schema_registry_configs = self.fetch_schema_registry_configs()
+        self.schema_registry_client_configs = self.fetch_schema_registry_client_configs()
 
     def fetch_broker_configs(self):
         url = "https://docs.confluent.io/platform/current/installation/configuration/broker-configs.html"
@@ -24,6 +25,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
             soup = BeautifulSoup(response.content, 'html.parser')
             configs = {}
             
+            # Assuming the configurations and their descriptions are structured in a specific way
             for item in soup.find_all('h3'):
                 config_name = item.get_text()[:-1]
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
@@ -40,6 +42,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
             soup = BeautifulSoup(response.content, 'html.parser')
             configs = {}
             
+            # Assuming the configurations and their descriptions are structured in a specific way
             for item in soup.find_all('h3'):
                 config_name = item.get_text()[:-1]
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
@@ -56,6 +59,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
             soup = BeautifulSoup(response.content, 'html.parser')
             configs = {}
             
+            # Assuming the configurations and their descriptions are structured in a specific way
             for item in soup.find_all('h3'):
                 config_name = item.get_text()[:-1]
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
@@ -72,6 +76,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
             soup = BeautifulSoup(response.content, 'html.parser')
             configs = {}
             
+            # Assuming the configurations and their descriptions are structured in a specific way
             for item in soup.find_all('h3'):
                 config_name = item.get_text()[:-1]
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
@@ -88,10 +93,29 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
             soup = BeautifulSoup(response.content, 'html.parser')
             configs = {}
             
+            # Assuming the configurations and their descriptions are structured in a specific way
             for item in soup.find_all('h2'):
                 config_name = item.get_text()[:-1]
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
                 if "License for Schema Registry Security Plugin" not in config_name:
+                    configs[config_name] = description
+            return configs
+        else:
+            return f"Error: Unable to fetch data, status code {response.status_code}"
+
+    def fetch_schema_registry_client_configs(self):
+        url = "https://docs.confluent.io/platform/current/schema-registry/sr-client-configs.html"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            configs = {}
+            
+            # Assuming the configurations and their descriptions are structured in a specific way
+            for item in soup.find_all('h2'):
+                config_name = item.get_text()[:-1]
+                description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
+                if "Related content" not in config_name:
                     configs[config_name] = description
             return configs
         else:
@@ -103,6 +127,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         completions += [(config+"\t"+self.sink_connect_configs[config], config) for config in self.sink_connect_configs]
         completions += [(config+"\t"+self.source_connect_configs[config], config) for config in self.source_connect_configs]
         completions += [(config+"\t"+self.schema_registry_configs[config], config) for config in self.schema_registry_configs]
+        completions += [(config+"\t"+self.schema_registry_client_configs[config], config) for config in self.schema_registry_client_configs]
         return completions
 
 class ConfluentPlatformAnsibleConfigurationAssistant(sublime_plugin.EventListener):
