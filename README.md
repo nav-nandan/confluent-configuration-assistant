@@ -12,3 +12,6 @@ Sublime Code Plugin for Confluent Configuration Assistance (CCA)
 
 ## cp-ansible variables auto complete
 ![](https://github.com/nav-nandan/confluent-configuration-assistant/blob/main/4-sublime-auto-complete-cp-ansible.png)
+
+## CP Docker config auto complete
+![](https://github.com/nav-nandan/confluent-configuration-assistant/blob/main/5-sublime-auto-complete-cp-docker.png)
