@@ -19,6 +19,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         self.rest_proxy_configs = self.fetch_rest_proxy_configs()
         self.mqtt_proxy_configs = self.fetch_mqtt_proxy_configs()
         self.ksqldb_configs = self.fetch_ksqldb_configs()
+        self.control_center_configs = self.fetch_control_center_configs()
 
     def fetch_broker_configs(self):
         url = "https://docs.confluent.io/platform/current/installation/configuration/broker-configs.html"
@@ -32,6 +33,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
                 config_name = item.get_text()[:-1]
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
                 configs[config_name] = description
+                configs["KAFKA_" + config_name.upper().replace("_", "__").replace(".", "_").replace("-", "___")] = description
             return configs
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
@@ -48,6 +50,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
                 config_name = item.get_text()[:-1]
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
                 configs[config_name] = description
+                configs["CONNECT_" + config_name.upper().replace("_", "__").replace(".", "_").replace("-", "___")] = description
             return configs
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
@@ -97,6 +100,8 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
                 if "License for Schema Registry Security Plugin" not in config_name:
                     configs[config_name] = description
+                    configs["SCHEMA_REGISTRY_" + config_name.upper().replace("_", "__").replace(".", "_").replace("-", "___")] = description
+
             return configs
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
@@ -130,6 +135,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
                 config_name = item.find_next('span', class_='pre').get_text()
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
                 configs[config_name] = description
+                configs["KAFKA_REST_" + config_name.upper().replace("_", "__").replace(".", "_").replace("-", "___")] = description
             return configs
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
@@ -149,6 +155,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
                 if 'Per query' in description:
                     description = item.find_next('p').find_next('p').get_text() if item.find_next('p').find_next('p') else "No description available"
                 configs[config_name] = description
+                configs["KSQL_" + config_name.upper().replace("_", "__").replace(".", "_").replace("-", "___")] = description
             return configs
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
@@ -165,6 +172,24 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
                 config_name = item.find_next('span', class_='pre').get_text()
                 description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
                 configs[config_name] = description
+                configs["KAFKA_MQTT_" + config_name.upper().replace("_", "__").replace(".", "_").replace("-", "___")] = description
+            return configs
+        else:
+            return f"Error: Unable to fetch data, status code {response.status_code}"
+
+    def fetch_control_center_configs(self):
+        url = "https://docs.confluent.io/control-center/current/installation/configuration.html"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            configs = {}
+            
+            for item in soup.find_all('h3'):
+                config_name = item.get_text()[:-1]
+                description = item.find_next('p').get_text() if item.find_next('p') else "No description available"
+                configs[config_name] = description
+                configs["CONTROL_CENTER_" + config_name.upper().replace("_", "__").replace(".", "_").replace("-", "___")] = description
             return configs
         else:
             return f"Error: Unable to fetch data, status code {response.status_code}"
@@ -179,6 +204,7 @@ class ConfluentPlatformConfigurationAssistant(sublime_plugin.EventListener):
         completions += [(config+"\t"+self.rest_proxy_configs[config], config) for config in self.rest_proxy_configs]
         completions += [(config+"\t"+self.ksqldb_configs[config], config) for config in self.ksqldb_configs]
         completions += [(config+"\t"+self.mqtt_proxy_configs[config], config) for config in self.mqtt_proxy_configs]
+        completions += [(config+"\t"+self.control_center_configs[config], config) for config in self.control_center_configs]
         return completions
 
 class ConfluentPlatformAnsibleConfigurationAssistant(sublime_plugin.EventListener):
@@ -209,13 +235,6 @@ class ConfluentPlatformAnsibleConfigurationAssistant(sublime_plugin.EventListene
 
     def on_query_completions(self, view, prefix, locations):
         completions = [(variable[0]+"\t"+variable[1]) for variable in self.cp_ansible_variables]
-        return completions
-
-class ConfluentDockerConfigurationAssistant(sublime_plugin.EventListener):
-    def on_query_completions(self, view, prefix, locations):
-        completions = [
-            ("CD\tExpand to CONFLUENT DOCKER", "CONFLUENT DOCKER"),
-        ]
         return completions
 
 class ConfluentForKubernetesConfigurationAssistant(sublime_plugin.EventListener):
